@@ -4,8 +4,6 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'manishchauhan27/my-docker-image'
         DOCKERHUB_CREDENTIALS = 'abc1b856-9747-4365-87a2-65d902c68afb' // Credentials ID for Docker Hub in Jenkins
-        DOCKER_USERNAME = "${credentials('abc1b856-9747-4365-87a2-65d902c68afb').username}"
-        DOCKER_PASSWORD = "${credentials('abc1b856-9747-4365-87a2-65d902c68afb').password}"
         REMOTE_SERVER_IP = '54.172.103.208'
         REMOTE_USER = 'ubuntu'
         SSH_CREDENTIALS_ID = 'bcedea98-7aed-4a62-8677-af8b91d10a55' // Credentials ID for SSH key in Jenkins
@@ -15,12 +13,15 @@ pipeline {
         stage('Deploy Docker Image on Remote Server') {
             steps {
                 script {
-                    def sshKey = credentials('SSH_CREDENTIALS_ID')
+                    def dockerCredentials = credentials(DOCKERHUB_CREDENTIALS)
+                    def dockerUsername = dockerCredentials.username
+                    def dockerPassword = dockerCredentials.password
+                    def sshKey = credentials(SSH_CREDENTIALS_ID)
 
                     sshagent(credentials: [sshKey]) {
                         sh """
                            ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_SERVER_IP} '
-                            docker login -u ${DOCKERHUB_CREDENTIALS_USR} -p ${DOCKERHUB_CREDENTIALS_PSW};
+                            docker login -u ${dockerUsername} -p ${dockerPassword};
                             docker pull ${DOCKER_IMAGE}:latest;
                             docker stop mynginx || true;
                             docker rm mynginx || true;
