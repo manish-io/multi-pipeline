@@ -10,14 +10,20 @@ pipeline {
         stage('Deploy Docker Image') {
             steps {
                 script {
-                    // SSH into your remote instance and run Docker commands 
-                    sshagent(credentials: ['bcedea98-7aed-4a62-8677-af8b91d10a55']) {
-                        sshCommand remote: "ubuntu@${DOCKER_HOST}", command: """
-                            docker pull $IMAGE_NAME
-                            docker stop mynginx || true
-                            docker rm mynginx || true
-                            docker run -d -p 80:80 --name mynginx $IMAGE_NAME
-                        """
+                    try {
+                        // Start SSH agent and provide credentials
+                        sshagent(credentials: ['bcedea98-7aed-4a62-8677-af8b91d10a55']) {
+                            // SSH into your EC2 instance and execute Docker commands
+                            sshCommand remote: "ubuntu@${DOCKER_HOST}", command: """
+                                docker pull $IMAGE_NAME
+                                docker stop mynginx || true
+                                docker rm mynginx || true
+                                docker run -d -p 80:80 --name mynginx $IMAGE_NAME
+                            """
+                        }
+                    } catch (Exception e) {
+                        echo "Deployment failed: ${e.message}"
+                        throw e
                     }
                 }
             }
