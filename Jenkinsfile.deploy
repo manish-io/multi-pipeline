@@ -11,25 +11,25 @@ pipeline {
             steps {
                 script {
                     try {
-                        echo "Starting SSH Agent with credentials..."
-                        // Start SSH agent and provide credentials
+                        echo "Starting SSH agent with credentials..."
                         sshagent(credentials: ['bcedea98-7aed-4a62-8677-af8b91d10a55']) {
                             echo "Connecting to remote host ${DOCKER_HOST}..."
-                            // SSH into your EC2 instance and execute Docker commands
-                            sshCommand remote: "ubuntu@${DOCKER_HOST}", command: """
+                            sh """
+                                ssh -o StrictHostKeyChecking=no ubuntu@${DOCKER_HOST} << 'EOF'
                                 echo "Pulling Docker image ${IMAGE_NAME}..."
-                                docker pull $IMAGE_NAME
+                                docker pull ${IMAGE_NAME}
                                 echo "Stopping existing container mynginx if exists..."
                                 docker stop mynginx || true
                                 echo "Removing existing container mynginx if exists..."
                                 docker rm mynginx || true
                                 echo "Running new container mynginx with image ${IMAGE_NAME}..."
-                                docker run -d -p 80:80 --name mynginx $IMAGE_NAME
+                                docker run -d -p 80:80 --name mynginx ${IMAGE_NAME}
+                                EOF
                             """
                         }
                     } catch (Exception e) {
                         echo "Deployment failed: ${e.message}"
-                        throw e
+                        currentBuild.result = 'FAILURE'
                     }
                 }
             }
