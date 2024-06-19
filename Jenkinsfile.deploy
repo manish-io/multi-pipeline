@@ -24,7 +24,6 @@ pipeline {
                              docker run -d -p 80:80 --name mynginx ${DOCKER_IMAGE}:latest"
                     """
                 }
-                }
             }
         }
     }
