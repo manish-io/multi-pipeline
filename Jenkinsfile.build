@@ -3,16 +3,16 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'manishchauhan27/my-docker-image'
-        docker-hub-credentials = 'abc1b856-9747-4365-87a2-65d902c68afb' // The ID of your Docker Hub credentials in Jenkins
+        DOCKERHUB_CREDENTIALS = 'abc1b856-9747-4365-87a2-65d902c68afb' // Credentials ID for Docker Hub in Jenkins
     }
 
     stages {
-        stage('Build Docker Image') {
+        stage('Build and Push Docker Image') {
             steps {
                 script {
                     def customImage = docker.build(DOCKER_IMAGE, '-f Dockerfile .')
-                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
-                        customImage.push()
+                    docker.withRegistry('https://registry.hub.docker.com/', DOCKERHUB_CREDENTIALS) {
+                        customImage.push('latest')
                     }
                 }
             }
@@ -21,16 +21,10 @@ pipeline {
 
     post {
         success {
-            script {
-                try {
-                    build job: 'deploy-pipeline', parameters: [file(name: 'image-sha.txt', file: 'image-sha.txt')]
-                } catch (Exception e) {
-                    currentBuild.result = 'FAILURE'
-                }
-            }
+            echo 'Docker image build and push completed successfully.'
         }
         failure {
-            // Handle failure case if needed
+            echo 'Docker image build and push failed.'
         }
     }
 }
