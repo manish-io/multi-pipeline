@@ -12,9 +12,11 @@ pipeline {
         stage('Deploy Docker Image on Remote Server') {
             steps {
                 script {
-                    sh "docker login -u ${env.DOCKERHUB_CREDENTIAL_USERNAME} -p ${env.DOCKERHUB_CREDENTIAL_PASSWORD}"
+                    DOCKER_USERNAME = credentials('abc1b856-9747-4365-87a2-65d902c68afb').username
+                    DOCKER_PASSWORD = credentials('abc1b856-9747-4365-87a2-65d902c68afb').password
 
-                    sh "docker pull ${DOCKER_IMAGE}:latest"
+                    
+                    sh "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
 
                     sh """
                         ssh -i ~/.ssh/id_rsa ${env.SSH_CREDENTIALS_ID}@${HOST_NAME} \
