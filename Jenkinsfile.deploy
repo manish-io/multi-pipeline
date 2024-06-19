@@ -28,13 +28,4 @@ pipeline {
             }
         }
     }
-
-    post {
-        success {
-            echo 'Docker image deployment completed successfully.'
-        }
-        failure {
-            echo 'Docker image deployment failed.'
-        }
-    }
 }
