@@ -6,7 +6,8 @@ pipeline {
         DOCKERHUB_CREDENTIALS = 'abc1b856-9747-4365-87a2-65d902c68afb' // Credentials ID for Docker Hub in Jenkins
         DOCKER_USERNAME = "${credentials('abc1b856-9747-4365-87a2-65d902c68afb').username}"
         DOCKER_PASSWORD = "${credentials('abc1b856-9747-4365-87a2-65d902c68afb').password}"
-        HOST_NAME = '54.172.103.208'
+        REMOTE_SERVER_IP = '54.172.103.208'
+        REMOTE_USER = 'ubuntu'
         SSH_CREDENTIALS_ID = 'bcedea98-7aed-4a62-8677-af8b91d10a55' // Credentials ID for SSH key in Jenkins
     }
 
@@ -14,20 +15,17 @@ pipeline {
         stage('Deploy Docker Image on Remote Server') {
             steps {
                 script {
-                    // Retrieve the SSH private key from Jenkins credentials
-                    def sshKey = credentials('your-ssh-credential-id')
-                    // Construct the SSH command to deploy the Docker image
-                    def sshScript = """
-                        ssh -o StrictHostKeyChecking=no -i '${sshKey}' ubuntu@${HOST_NAME} '
-                            docker login -u ${DOCKER_USERNAME} -p '${DOCKER_PASSWORD}' &&
-                            docker pull ${DOCKER_IMAGE}:latest &&
-                            docker stop mynginx || true &&
-                            docker rm mynginx || true &&
-                            docker run -d -p 80:80 --name mynginx ${DOCKER_IMAGE}:latest
-                        '
-                    """
-                    // Execute the SSH command
-                    sh(script: sshScript, returnStatus: true)
+                    def sshKey = credentials('SSH_CREDENTIALS_ID')
+
+                    sshagent(credentials: [sshKey]) {
+                        sh """
+                           ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_SERVER_IP} '
+                            docker login -u ${DOCKERHUB_CREDENTIALS_USR} -p ${DOCKERHUB_CREDENTIALS_PSW};
+                            docker pull ${DOCKER_IMAGE}:latest;
+                            docker stop mynginx || true;
+                            docker rm mynginx || true;
+                            docker run -d -p 80:80 --name mynginx ${DOCKER_IMAGE}:latest'
+                        """
                 }
             }
         }
