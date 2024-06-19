@@ -1,11 +1,19 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_IMAGE = 'manishchauhan27/my-docker-image'
+        docker-hub-credentials = 'abc1b856-9747-4365-87a2-65d902c68afb' // The ID of your Docker Hub credentials in Jenkins
+    }
+
     stages {
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build('my-docker-image', '-f Dockerfile .')
+                    def customImage = docker.build(DOCKER_IMAGE, '-f Dockerfile .')
+                    docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+                        customImage.push()
+                    }
                 }
             }
         }
@@ -13,7 +21,16 @@ pipeline {
 
     post {
         success {
-            build job: 'deploy-pipeline'
+            script {
+                try {
+                    build job: 'deploy-pipeline', parameters: [file(name: 'image-sha.txt', file: 'image-sha.txt')]
+                } catch (Exception e) {
+                    currentBuild.result = 'FAILURE'
+                }
+            }
+        }
+        failure {
+            // Handle failure case if needed
         }
     }
 }
