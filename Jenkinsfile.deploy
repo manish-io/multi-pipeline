@@ -12,18 +12,18 @@ pipeline {
         stage('Deploy Docker Image on Remote Server') {
             steps {
                 script {
-                    // SSH into the remote server and perform Docker operations
-                    sshagent(credentials: [SSH_CREDENTIALS_ID]) {
-                        sh """
-                            ssh -o StrictHostKeyChecking=no ubuntu@${HOST_NAME} << 'EOF'
-                            docker login -u \${DOCKERHUB_CREDENTIALS_USERNAME} -p \${DOCKERHUB_CREDENTIALS_PASSWORD}
-                            docker pull ${DOCKER_IMAGE}:latest
-                            docker stop mynginx || true
-                            docker rm mynginx || true
-                            docker run -d -p 80:80 --name mynginx ${DOCKER_IMAGE}:latest
-                            EOF
-                        """
-                    }
+                    sh "docker login -u ${env.DOCKERHUB_CREDENTIAL_USERNAME} -p ${env.DOCKERHUB_CREDENTIAL_PASSWORD}"
+
+                    sh "docker pull ${DOCKER_IMAGE}:latest"
+
+                    sh """
+                        ssh -i ~/.ssh/id_rsa ${env.SSH_CREDENTIALS_ID}@${HOST_NAME} \
+                            "docker pull ${DOCKER_IMAGE}:latest && \
+                             docker stop mynginx || true && \
+                             docker rm mynginx || true && \
+                             docker run -d -p 80:80 --name mynginx ${DOCKER_IMAGE}:latest"
+                    """
+                }
                 }
             }
         }
