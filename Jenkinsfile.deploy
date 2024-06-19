@@ -10,9 +10,6 @@ pipeline {
         stage('Deploy Docker Image') {
             steps {
                 script {
-                    // Pull the Docker image from Docker Hub or your registry
-                    docker.image(IMAGE_NAME).pull()
-
                     // SSH into your remote instance and run Docker commands
                     sshagent(['bcedea98-7aed-4a62-8677-af8b91d10a55']) {
                         sshCommand remote: "ubuntu@${DOCKER_HOST}", command: """
