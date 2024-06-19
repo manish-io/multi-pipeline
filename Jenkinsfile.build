@@ -5,9 +5,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    echo "Starting Docker build process..."
                     docker.build('my-docker-image', '-f Dockerfile .')
-                    echo "Docker image build completed."
                 }
             }
         }
@@ -15,18 +13,7 @@ pipeline {
 
     post {
         success {
-            script {
-                echo "Build succeeded, triggering deploy-pipeline..."
-                try {
-                    build job: 'deploy-pipeline'
-                } catch (Exception e) {
-                    echo "Failed to trigger deploy-pipeline: ${e.message}"
-                    currentBuild.result = 'FAILURE'
-                }
-            }
-        }
-        failure {
-            echo "Build failed. Skipping deploy-pipeline trigger."
+            build job: 'deploy-pipeline'
         }
     }
 }
