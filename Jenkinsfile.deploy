@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_HOST = '54.172.103.208'
-        IMAGE_NAME = 'mynginx:latest'
+        IMAGE_NAME = 'my-docker-image'
     }
 
     stages {
