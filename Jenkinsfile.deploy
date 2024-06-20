@@ -11,7 +11,7 @@ pipeline {
                     ssh -o StrictHostKeyChecking=no -i $SSH_KEY ubuntu@54.89.174.133 << 'EOF'
                     docker pull manishchauhan27/my-docker-image
                     docker run -d -p 8080:80 manishchauhan27/my-docker-image
-                    EOF
+                  << EOF
                     '''
                 }
             }
