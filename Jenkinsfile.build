@@ -22,7 +22,7 @@ pipeline {
     post {
         success {
             echo 'Docker image build and push completed successfully.'
-            build job: 'deploy-pipeline'
+            build job: 'deploy-pipel'
         }
         failure {
             echo 'Docker image build and push failed.'
