@@ -1,33 +1,18 @@
 pipeline {
     agent any
-
     environment {
-        DOCKER_IMAGE = 'manishchauhan27/my-docker-image'
-        DOCKERHUB_CREDENTIALS = 'abc1b856-9747-4365-87a2-65d902c68afb' // Credentials ID for Docker Hub in Jenkins
-        REMOTE_SERVER_IP = '54.172.103.208'
-        REMOTE_USER = 'ubuntu'
-        SSH_CREDENTIALS_ID = 'bcedea98-7aed-4a62-8677-af8b91d10a55' // Credentials ID for SSH key in Jenkins
+        SSH_KEY = credentials('bcedea98-7aed-4a62-8677-af8b91d10a55')
     }
-
     stages {
-        stage('Deploy Docker Image on Remote Server') {
+        stage('Deploy') {
             steps {
-                script {
-                    def dockerCredentials = credentials(DOCKERHUB_CREDENTIALS)
-                    def dockerUsername = dockerCredentials.username
-                    def dockerPassword = dockerCredentials.password
-                    def sshKey = credentials(SSH_CREDENTIALS_ID)
-
-                    sshagent(credentials: [sshKey]) {
-                        sh """
-                           ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_SERVER_IP} '
-                            docker login -u ${dockerUsername} -p ${dockerPassword};
-                            docker pull ${DOCKER_IMAGE}:latest;
-                            docker stop mynginx || true;
-                            docker rm mynginx || true;
-                            docker run -d -p 80:80 --name mynginx ${DOCKER_IMAGE}:latest'
-                        """
-                    }
+                sshagent(['bcedea98-7aed-4a62-8677-af8b91d10a55']) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no -i $SSH_KEY ubuntu@54.172.103.208 <<EOF
+                    docker pull manishchauhan27/my-docker-image
+                    docker run -d -p 80:80 manishchauhan27/my-docker-image
+                    EOF
+                    '''
                 }
             }
         }
